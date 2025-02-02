@@ -1,5 +1,6 @@
 {
     "require": {
-        "spomky-labs/otphp": "^11.2"
+        "spomky-labs/otphp": "^11.2",
+        "ua-parser/uap-php": "^3.9"
     }
 }

@@ -1,4 +1,7 @@
 <?php
+
+use UAParser\Parser;
+
 require_once(__DIR__ . "/Environment.class.php");
 require_once(__DIR__ . "/GlobalPDO.class.php");
 require_once(__DIR__ . "/mailer/Mailer.class.php");
@@ -246,14 +249,8 @@ class GlobalEngine
      */
     public function device_name()
     {
-        try {
-            $browser = @get_browser($_SERVER['HTTP_USER_AGENT'], true);
-        } catch (Exception $ex) {
-            $browser = false;
-        }
-
-        if ($browser === false) return "Unknown device";
-        else return $browser["browser"] . " for " . $browser["platform"];
+        $parsedUA = Parser::create()->parse($_SERVER['HTTP_USER_AGENT']);
+        return $parsedUA->ua->toString() . " on " . $parsedUA->os->toString();
     }
 
     /**
