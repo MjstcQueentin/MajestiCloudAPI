@@ -79,13 +79,8 @@ class GlobalEngine
     }
 
     /**
-     * Check if a given API Key is correct.
+     * Check if the instance is running on a production environment
      */
-    public function check_api_key($api_key)
-    {
-        return $api_key == $this->environment->item("API_KEY");
-    }
-
     public function is_production(): bool
     {
         return $this->environment->item("ENVIRONMENT_TYPE") == "production";

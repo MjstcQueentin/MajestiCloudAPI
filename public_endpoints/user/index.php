@@ -12,37 +12,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
             "data" => $engine->current_session()["user"]
         ], 200);
         break;
-    case "POST":
-        $engine = new UserEngine(false);
-
-        if (empty($_POST["email"]) | empty($_POST["password"]) | empty($_POST["name"]) | empty($_POST["api_key"])) {
-            $engine->echo_response([
-                "status" => false,
-                "message" => "Missing parameters."
-            ], 400);
-        }
-
-        if (!$engine->check_api_key($_POST["api_key"])) {
-            $engine->echo_response([
-                "status" => false,
-                "message" => "Wrong API Key."
-            ], 403);
-        }
-
-        if($engine->does_user_exist($_POST["email"])) {
-            $engine->echo_response([
-                "status" => false,
-                "message" => "A user with this primary email is already registered."
-            ], 400);
-        }
-
-        $uuid = $engine->create_user($_POST["email"], $_POST["password"], htmlspecialchars($_POST["name"]));
-
-        $engine->echo_response([
-            "status" => true,
-            "message" => "Successfully created the user."
-        ], 201);
-        break;
     case "PATCH":
         $engine = new UserEngine(true);
 

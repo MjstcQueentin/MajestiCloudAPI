@@ -25,8 +25,6 @@ class Environment
 
         $this->environment["SUPPORT_EMAIL"] = "webmaster@example.com";
 
-        $this->environment["API_KEY"] = "dummy";
-
         // Read the .env file, if it exists
         if (is_file(__DIR__ . "/../.env")) {
             foreach (file(__DIR__ . "/../.env") as $line) {
