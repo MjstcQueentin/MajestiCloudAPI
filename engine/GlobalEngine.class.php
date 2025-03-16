@@ -228,15 +228,13 @@ class GlobalEngine
     }
 
     /**
-     * Fetches and returns the client IP address from the HTTP headers
+     * Fetches and returns the client's IP address
      * 
      * @return string
      */
     public function end_user_ip_address()
     {
-        if (!empty($_SERVER['HTTP_X_MAJESTICLOUD_CLIENT']))
-            return $_SERVER['HTTP_X_MAJESTICLOUD_CLIENT'];
-        elseif (!empty($_SERVER['HTTP_CLIENT_IP']))
+        if (!empty($_SERVER['HTTP_CLIENT_IP']))
             return $_SERVER['HTTP_CLIENT_IP'];
         elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
             return $_SERVER['HTTP_X_FORWARDED_FOR'];

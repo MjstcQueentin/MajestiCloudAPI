@@ -77,7 +77,7 @@ class OAuthEngine extends GlobalEngine
         $require_mfa = !empty($user["totp_secret"]);
 
         $random_code = bin2hex(random_bytes(64));
-        $insert = $this->pdo->insert_authorization($random_code, $user_uuid, $client_uuid, $require_mfa, $code_challenge, $code_challenge_method);
+        $insert = $this->pdo->insert_authorization($random_code, $user_uuid, $client_uuid, $this->device_name(), $this->end_user_ip_address(), $require_mfa, $code_challenge, $code_challenge_method);
         if (!$insert) throw new Exception("Failed to create the authorization code.");
         return $random_code;
     }
@@ -92,10 +92,12 @@ class OAuthEngine extends GlobalEngine
         $this->pdo->delete_authorization($client_uuid, $user_uuid);
     }
 
-    public function create_session($client_uuid, $user_uuid)
+    public function create_session(string $authorization_key, string $client_uuid)
     {
+        $authorization = $this->get_authorization($authorization_key, $client_uuid);
+
         $random_token = bin2hex(random_bytes(64));
-        $insert = $this->session_pdo->insert_session($client_uuid, $this->device_name(), $this->end_user_ip_address(), $random_token, $user_uuid);
+        $insert = $this->session_pdo->insert_session($client_uuid, $authorization['device_name'], $authorization['ip'], $random_token, $authorization['user_uuid']);
         if (!$insert) throw new Exception("Failed to create the session token.");
 
         $client = $this->client_pdo->select_client($client_uuid);

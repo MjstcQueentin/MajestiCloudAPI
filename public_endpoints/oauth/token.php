@@ -80,7 +80,7 @@ if (!empty($authorization["code_challenge"])) {
     }
 }
 
-$token = $engine->create_session(trim($_POST["client_uuid"]), $authorization["user_uuid"]);
+$token = $engine->create_session($authorization['authorization_key'], trim($_POST["client_uuid"]));
 
 $engine->clear_authorizations(trim($_POST["client_uuid"]), $authorization["user_uuid"]);
 

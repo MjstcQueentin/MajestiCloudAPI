@@ -12,14 +12,18 @@ class OAuthPDO extends GlobalPDO
         string $authorization_code,
         string $user_uuid,
         string $client_uuid,
+        string $device_name,
+        string $ip,
         bool $require_mfa = false,
         string $code_challenge = null,
         string $code_challenge_method = null
     ) {
-        $stmt = $this->pdo->prepare("INSERT INTO oauth_authorization(authorization_key, user_uuid, client_uuid, code_challenge, code_challenge_method, require_mfa) VALUES (:authorization_code, :user_uuid, :client_uuid, :code_challenge, :code_challenge_method, :require_mfa)");
+        $stmt = $this->pdo->prepare("INSERT INTO oauth_authorization(authorization_key, user_uuid, client_uuid, device_name, ip, code_challenge, code_challenge_method, require_mfa) VALUES (:authorization_code, :user_uuid, :client_uuid, :device_name, :ip, :code_challenge, :code_challenge_method, :require_mfa)");
         $stmt->bindValue("authorization_code", $authorization_code);
         $stmt->bindValue("user_uuid", $user_uuid);
         $stmt->bindValue("client_uuid", $client_uuid);
+        $stmt->bindValue("device_name", $device_name);
+        $stmt->bindValue("ip", $ip);
         $stmt->bindValue("code_challenge", $code_challenge);
         $stmt->bindValue("code_challenge_method", $code_challenge_method);
         $stmt->bindValue("require_mfa", $require_mfa ? 1 : 0);
