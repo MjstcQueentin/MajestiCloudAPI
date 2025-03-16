@@ -12,14 +12,16 @@ class OAuthPDO extends GlobalPDO
         string $authorization_code,
         string $user_uuid,
         string $client_uuid,
-        string $pkce_code_verifier = null,
-        bool $require_mfa = false
+        bool $require_mfa = false,
+        string $code_challenge = null,
+        string $code_challenge_method = null
     ) {
-        $stmt = $this->pdo->prepare("INSERT INTO oauth_authorization(authorization_key, user_uuid, client_uuid, pkce_code_verifier, require_mfa) VALUES (:authorization_code, :user_uuid, :client_uuid, :pkce_code_verifier, :require_mfa)");
+        $stmt = $this->pdo->prepare("INSERT INTO oauth_authorization(authorization_key, user_uuid, client_uuid, code_challenge, code_challenge_method, require_mfa) VALUES (:authorization_code, :user_uuid, :client_uuid, :code_challenge, :code_challenge_method, :require_mfa)");
         $stmt->bindValue("authorization_code", $authorization_code);
         $stmt->bindValue("user_uuid", $user_uuid);
         $stmt->bindValue("client_uuid", $client_uuid);
-        $stmt->bindValue("pkce_code_verifier", $pkce_code_verifier);
+        $stmt->bindValue("code_challenge", $code_challenge);
+        $stmt->bindValue("code_challenge_method", $code_challenge_method);
         $stmt->bindValue("require_mfa", $require_mfa ? 1 : 0);
         return $stmt->execute();
     }

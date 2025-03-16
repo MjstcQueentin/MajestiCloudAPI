@@ -86,6 +86,11 @@ class GlobalEngine
         return $api_key == $this->environment->item("API_KEY");
     }
 
+    public function is_production(): bool
+    {
+        return $this->environment->item("ENVIRONMENT_TYPE") == "production";
+    }
+
     /**
      * Returns the current session data if exists, or null otherwise.
      */
@@ -249,7 +254,7 @@ class GlobalEngine
      */
     public function device_name()
     {
-        if(empty($_SERVER['HTTP_USER_AGENT'])) return "Unknown device";
+        if (empty($_SERVER['HTTP_USER_AGENT'])) return "Unknown device";
         $parsedUA = Parser::create()->parse($_SERVER['HTTP_USER_AGENT']);
         return $parsedUA->ua->toString() . " on " . $parsedUA->os->toString();
     }

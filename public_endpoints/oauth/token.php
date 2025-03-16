@@ -21,7 +21,7 @@ if (empty($_POST["authorization_code"]) || empty($_POST["client_uuid"])) {
 
 // Check if the authorization exists
 $authorization = $engine->get_authorization(trim($_POST["authorization_code"]), trim($_POST["client_uuid"]));
-if($authorization === false) {
+if ($authorization === false) {
     $engine->echo_response([
         "status" => false,
         "message" => "Could not recognize the authorization code."
@@ -29,37 +29,50 @@ if($authorization === false) {
 }
 
 // Check if MFA is required
-if($authorization["require_mfa"] == 1) {
+if ($authorization["require_mfa"] == 1) {
     $engine->echo_response([
         "status" => false,
         "message" => "The user must go through the Multi-Factor Authentication step before you can use this code."
     ], 401);
 }
 
-if(!empty($authorization["pkce_code_verifier"])) {
-    if(empty($_POST["code_verifier"])) {
+if (!empty($authorization["code_challenge"])) {
+    if (empty($_POST["code_verifier"])) {
         $engine->echo_response([
             "status" => false,
             "message" => "You must supply a PKCE Code Verifier as the authorization was created using this method."
         ], 400);
     }
 
-    if($authorization["pkce_code_verifier"] != trim($_POST["code_verifier"])) {
+    $pkce_valid = false;
+    switch ($authorization["code_challenge_method"]) {
+        case "plain":
+        default:
+            $pkce_valid = $authorization["code_challenge"] == trim($_POST["code_verifier"]);
+            break;
+        case "S256":
+            $s256 = hash("sha256", $_POST["code_verifier"], true);
+            $s256 = sodium_bin2base64($s256, SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING);
+            $pkce_valid = hash_equals($authorization["code_challenge"], $s256);
+            break;
+    }
+
+    if (!$pkce_valid) {
         $engine->echo_response([
             "status" => false,
-            "message" => "The supplied PKCE Code Verifier does not match the one used for the authorization."
+            "message" => "The supplied PKCE Code Verifier does not match the authorization's code challenge. $s256"
         ], 401);
     }
 } else {
-    if(empty($_POST["client_secret"])) {
+    if (empty($_POST["client_secret"])) {
         $engine->echo_response([
             "status" => false,
-            "message" => "You must supply a Client Secret as the authorization was created without PKCE Code Verifier."
+            "message" => "You must supply a Client Secret as the authorization was created without a PKCE Code Challenge."
         ], 400);
     }
 
     $client = $engine->select_client(trim($_POST["client_uuid"]));
-    if($client["secret_key"] != trim($_POST["client_secret"])) {
+    if ($client["secret_key"] != trim($_POST["client_secret"])) {
         $engine->echo_response([
             "status" => false,
             "message" => "Could not recognize the client secret key."

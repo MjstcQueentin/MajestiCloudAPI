@@ -71,13 +71,13 @@ class OAuthEngine extends GlobalEngine
     /**
      * Generate and insert a new authorization code for a given client and authenticated user
      */
-    public function create_authorization_code(string $user_uuid, string $client_uuid, $code_verifier = null)
+    public function create_authorization_code(string $user_uuid, string $client_uuid, $code_challenge = null, $code_challenge_method = null)
     {
         $user = $this->select_user($user_uuid, "uuid");
         $require_mfa = !empty($user["totp_secret"]);
 
         $random_code = bin2hex(random_bytes(64));
-        $insert = $this->pdo->insert_authorization($random_code, $user_uuid, $client_uuid, $code_verifier, $require_mfa);
+        $insert = $this->pdo->insert_authorization($random_code, $user_uuid, $client_uuid, $require_mfa, $code_challenge, $code_challenge_method);
         if (!$insert) throw new Exception("Failed to create the authorization code.");
         return $random_code;
     }

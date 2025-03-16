@@ -25,6 +25,22 @@ try {
         $error .= " Invalid redirect URI.";
     }
 
+    // Check if the PKCE Code Challenge is required, and if so, is supplied
+    if (!empty($_REQUEST["code_challenge"])) {
+        $code_challenge = $_REQUEST["code_challenge"];
+
+        if (!empty($_REQUEST["code_challenge_method"])) {
+            $code_challenge_method = $_REQUEST["code_challenge_method"];
+            if (!in_array($code_challenge_method, ["plain", "S256"])) {
+                $error .= " This PKCE Code Challenge Method is not supported.";
+            }
+        } else {
+            $code_challenge_method = "plain";
+        }
+    } elseif ($client['require_pkce'] == 1) {
+        $error .= " This client requires a PKCE Code Challenge to be supplied.";
+    }
+
     // If the form is POSTed
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check if all mendatory parameters are supplied
@@ -36,32 +52,20 @@ try {
             if (!$valid) {
                 $_SESSION["alert"] = "Invalid credentials.";
             } else {
-                // Get the PKCE Code Verifier, if there is one
-                $code_verifier = null;
-                if (!empty($_POST["code_challenge"])) {
-                    switch ($_POST["code_challenge_method"]) {
-                        case "S256":
-                            $error .= " We don't support SHA256 hashed code challenges yet. Please provide a code_challenge in plain text or base64 encoded.";
-                            break;
-                        case "base64":
-                            $code_verifier = base64_decode($_POST["code_challenge"]);
-                            break;
-                        case "plain":
-                        default:
-                            $code_verifier = $_POST["code_challenge"];
-                            break;
-                    }
-
-                    if ((strlen($code_verifier) < 43 || strlen($code_verifier) > 128)) {
-                        $error .= " The PKCE code verifier must be between 43 and 128 characters long.";
-                    }
+                // Create an authorization code for the authenticated user and client 
+                if (empty($error)) {
+                    $user = $engine->select_user($_POST["username"]);
+                    $code = $engine->create_authorization_code(
+                        $user["uuid"],
+                        $_POST["client_uuid"],
+                        !empty($code_challenge) ? $code_challenge : null,
+                        !empty($code_challenge_method) ? $code_challenge_method : null
+                    );
+                    $mfa_required = !empty($user["totp_secret"]);
+                } else {
+                    $code = false;
                 }
 
-                // Create an authorization code for the authenticated user and client 
-                $user = $engine->select_user($_POST["username"]);
-                $code = $engine->create_authorization_code($user["uuid"], $_POST["client_uuid"], $code_verifier);
-                $mfa_required = !empty($user["totp_secret"]);
-                
                 if ($code === false) {
                     $error .= " Internal failure while trying to create an authorization code.";
                 } else if ($mfa_required) {
@@ -76,7 +80,11 @@ try {
     }
 } catch (Exception $ex) {
     // This is to prevent JSON-printing of errors
-    $error .= " Internal failure.";
+    if (!$engine->is_production()) {
+        $error .= $ex->__toString();
+    } else {
+        $error .= " Internal failure.";
+    }
 }
 ?>
 
