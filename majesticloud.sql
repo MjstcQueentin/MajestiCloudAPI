@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : lun. 07 août 2023 à 22:17
--- Version du serveur : 8.0.33-0ubuntu0.22.04.4
--- Version de PHP : 8.1.2-1ubuntu2.13
+-- Généré le : lun. 17 mars 2025 à 00:10
+-- Version du serveur : 8.0.41-0ubuntu0.22.04.1
+-- Version de PHP : 8.1.2-1ubuntu2.20
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -47,7 +47,8 @@ CREATE TABLE `client` (
   `webpage` text NOT NULL,
   `description` text NOT NULL,
   `callback_url` text NOT NULL,
-  `secret_key` text NOT NULL
+  `secret_key` text NOT NULL,
+  `require_pkce` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
@@ -84,7 +85,11 @@ CREATE TABLE `oauth_authorization` (
   `authorization_key` varchar(128) NOT NULL,
   `user_uuid` varchar(36) NOT NULL,
   `client_uuid` varchar(36) NOT NULL,
-  `pkce_code_verifier` text
+  `device_name` text,
+  `ip` text,
+  `code_challenge` varchar(128) DEFAULT NULL,
+  `code_challenge_method` varchar(5) DEFAULT NULL,
+  `require_mfa` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
@@ -130,6 +135,7 @@ CREATE TABLE `user` (
   `primary_email_validation_key` varchar(128) DEFAULT NULL,
   `recovery_email` text,
   `recovery_email_validation_key` varchar(128) DEFAULT NULL,
+  `totp_secret` text,
   `created_on` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_activity_on` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `to_be_deleted_after` datetime DEFAULT NULL,
@@ -185,7 +191,9 @@ ALTER TABLE `permission`
 -- Index pour la table `session`
 --
 ALTER TABLE `session`
-  ADD PRIMARY KEY (`uuid`);
+  ADD PRIMARY KEY (`uuid`),
+  ADD KEY `FK_session_user` (`user_uuid`),
+  ADD KEY `FK_session_client` (`client_uuid`);
 
 --
 -- Index pour la table `user`
@@ -217,22 +225,29 @@ ALTER TABLE `browser_commits`
 -- Contraintes pour la table `client_has_admin`
 --
 ALTER TABLE `client_has_admin`
-  ADD CONSTRAINT `client_has_admin_ibfk_1` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`),
-  ADD CONSTRAINT `client_has_admin_ibfk_2` FOREIGN KEY (`user_uuid`) REFERENCES `user` (`uuid`);
+  ADD CONSTRAINT `FK_clienthasadmin_client` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  ADD CONSTRAINT `FK_clienthasadmin_user` FOREIGN KEY (`user_uuid`) REFERENCES `user` (`uuid`) ON DELETE CASCADE ON UPDATE RESTRICT;
 
 --
 -- Contraintes pour la table `client_has_permission`
 --
 ALTER TABLE `client_has_permission`
-  ADD CONSTRAINT `client_has_permission_ibfk_1` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`),
-  ADD CONSTRAINT `client_has_permission_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`);
+  ADD CONSTRAINT `FK_clienthaspermission_client` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_clienthaspermission_permission` FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `oauth_authorization`
 --
 ALTER TABLE `oauth_authorization`
-  ADD CONSTRAINT `oauth_authorization_ibfk_1` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`),
-  ADD CONSTRAINT `oauth_authorization_ibfk_2` FOREIGN KEY (`user_uuid`) REFERENCES `user` (`uuid`);
+  ADD CONSTRAINT `oauth_authorization_ibfk_1` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  ADD CONSTRAINT `oauth_authorization_ibfk_2` FOREIGN KEY (`user_uuid`) REFERENCES `user` (`uuid`) ON DELETE CASCADE ON UPDATE RESTRICT;
+
+--
+-- Contraintes pour la table `session`
+--
+ALTER TABLE `session`
+  ADD CONSTRAINT `FK_session_client` FOREIGN KEY (`client_uuid`) REFERENCES `client` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_session_user` FOREIGN KEY (`user_uuid`) REFERENCES `user` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
