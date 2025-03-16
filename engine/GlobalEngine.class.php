@@ -249,6 +249,7 @@ class GlobalEngine
      */
     public function device_name()
     {
+        if(empty($_SERVER['HTTP_USER_AGENT'])) return "Unknown device";
         $parsedUA = Parser::create()->parse($_SERVER['HTTP_USER_AGENT']);
         return $parsedUA->ua->toString() . " on " . $parsedUA->os->toString();
     }
