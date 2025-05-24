@@ -1,6 +1,6 @@
 <?php
 session_start();
-if(!isset($_SESSION["alert"])) $_SESSION["alert"] = "";
+if (!isset($_SESSION["alert"])) $_SESSION["alert"] = "";
 
 require_once(__DIR__ . "/../../engine/user/UserEngine.class.php");
 $error = "";
@@ -16,12 +16,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $uuid = $engine->create_user($_POST["username"], $_POST["password"], htmlspecialchars($_POST["display_name"]));
             $_SESSION["alert"] .= " Successfully created the user.";
 
-            if(empty($_REQUEST['client_uuid']) || empty($_REQUEST['redirect_uri'])) {
+            if ((empty($_REQUEST['client_uuid']) && empty($_REQUEST['client_id'])) || empty($_REQUEST['redirect_uri'])) {
                 $_SESSION["alert"] .= " You can now go back to your client and log into it through MajestiCloud.";
             } else {
                 $_SESSION["alert"] .= " You can now log into MajestiCloud.";
-                header("Location: authorize.php?".http_build_query([
-                    "client_uuid" => $_REQUEST["client_uuid"],
+                header("Location: authorize.php?" . http_build_query([
+                    "client_uuid" => $_REQUEST['client_id'] ?? $_REQUEST["client_uuid"],
                     "redirect_uri" => $_REQUEST["redirect_uri"],
                     "code_challenge" => !empty($_REQUEST["code_challenge"]) ? $_REQUEST["code_challenge"] : "",
                     "code_challenge_method" => !empty($_REQUEST["code_challenge_method"]) ? $_REQUEST["code_challenge_method"] : "",
@@ -89,8 +89,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php $_SESSION["alert"] = ""; ?>
             <?php endif; ?>
             <form action="newaccount.php" method="POST">
-                <?php if (!empty($_REQUEST['client_uuid']) && !empty($_REQUEST['redirect_uri'])) : ?>
-                    <input type="hidden" name="client_uuid" value="<?= $_REQUEST['client_uuid'] ?>">
+                <?php if ((!empty($_REQUEST['client_uuid']) || !empty($_REQUEST['client_id'])) && !empty($_REQUEST['redirect_uri'])) : ?>
+                    <input type="hidden" name="client_id" value="<?= $_REQUEST['client_id'] ?? $_REQUEST['client_uuid'] ?>">
                     <input type="hidden" name="redirect_uri" value="<?= $_REQUEST['redirect_uri'] ?>">
                     <?php if (!empty($_REQUEST["code_challenge"]) && !empty($_REQUEST["code_challenge_method"])) : ?>
                         <input type="hidden" name="code_challenge" value="<?= $_REQUEST['code_challenge'] ?>">
@@ -116,11 +116,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <button type="submit" id="submitBtn" class="btn btn-primary shadow-sm">Continue <i class="bi bi-chevron-right"></i></button>
                 </div>
             </form>
-            <?php if (!empty($_REQUEST['client_uuid']) && !empty($_REQUEST['redirect_uri'])) : ?>
+            <?php if ((!empty($_REQUEST['client_uuid']) || !empty($_REQUEST['client_id'])) && !empty($_REQUEST['redirect_uri'])) : ?>
                 <div class="border-top mt-3 pt-3">
                     <p class="fs-5 mb-1">Do you already have an account on MajestiCloud?</p>
                     <form action="authorize.php" method="GET">
-                        <input type="hidden" name="client_uuid" value="<?= $_REQUEST['client_uuid'] ?>">
+                        <input type="hidden" name="client_id" value="<?= $_REQUEST['client_id'] ?? $_REQUEST['client_uuid'] ?>">
                         <input type="hidden" name="redirect_uri" value="<?= $_REQUEST['redirect_uri'] ?>">
                         <?php if (!empty($_REQUEST["code_challenge"]) && !empty($_REQUEST["code_challenge_method"])) : ?>
                             <input type="hidden" name="code_challenge" value="<?= $_REQUEST['code_challenge'] ?>">

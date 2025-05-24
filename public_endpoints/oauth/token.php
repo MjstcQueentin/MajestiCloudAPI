@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
 }
 
 // Check if all mendatory parameters are supplied
-if (empty($_POST["authorization_code"]) || empty($_POST["client_uuid"])) {
+if (empty($_POST["authorization_code"]) || (empty($_POST["client_uuid"]) && empty($_POST["client_id"]))) {
     $engine->echo_response([
         "status" => false,
         "message" => "Missing parameters."
@@ -20,7 +20,8 @@ if (empty($_POST["authorization_code"]) || empty($_POST["client_uuid"])) {
 }
 
 // Check if the authorization exists
-$authorization = $engine->get_authorization(trim($_POST["authorization_code"]), trim($_POST["client_uuid"]));
+$client_id = trim($_POST["client_id"] ?? $_POST["client_uuid"]);
+$authorization = $engine->get_authorization(trim($_POST["authorization_code"]), $client_id);
 if ($authorization === false) {
     $engine->echo_response([
         "status" => false,
@@ -71,7 +72,7 @@ if (!empty($authorization["code_challenge"])) {
         ], 400);
     }
 
-    $client = $engine->select_client(trim($_POST["client_uuid"]));
+    $client = $engine->select_client($client_id);
     if ($client["secret_key"] != trim($_POST["client_secret"])) {
         $engine->echo_response([
             "status" => false,
@@ -80,9 +81,9 @@ if (!empty($authorization["code_challenge"])) {
     }
 }
 
-$token = $engine->create_session($authorization['authorization_key'], trim($_POST["client_uuid"]));
+$token = $engine->create_session($authorization['authorization_key'], $client_id);
 
-$engine->clear_authorizations(trim($_POST["client_uuid"]), $authorization["user_uuid"]);
+$engine->clear_authorizations($client_id, $authorization["user_uuid"]);
 
 $engine->echo_response([
     "status" => true,

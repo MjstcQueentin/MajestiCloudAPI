@@ -8,14 +8,14 @@ $error = "";
 
 try {
     // Check for mendatory values
-    if (empty($_REQUEST["code"]) || empty($_REQUEST["client_uuid"])) {
+    if (empty($_REQUEST["code"]) || (empty($_REQUEST["client_uuid"]) && empty($_REQUEST["client_id"]))) {
         $error .= " Missing parameters in the request.";
     }
-    $client = $engine->select_client($_REQUEST["client_uuid"]);
+    $client = $engine->select_client($_REQUEST["client_id"] ?? $_REQUEST["client_uuid"]);
 
     // If the form is POSTed
     if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_REQUEST["totp"])) {
-        $check = $engine->check_totp($_REQUEST["code"], $_REQUEST["client_uuid"], $_REQUEST["totp"]);
+        $check = $engine->check_totp($_REQUEST["code"], $_REQUEST["client_id"] ?? $_REQUEST["client_uuid"], $_REQUEST["totp"]);
 
         if (!$check) {
             $_SESSION["alert"] = "Invalid OTP code. Maybe it expired, or your OTP app is misconfigured.";
@@ -93,7 +93,7 @@ try {
 
             <form action="mfa_intersistial.php" method="POST">
                 <input type="hidden" name="code" value="<?= htmlspecialchars($_REQUEST["code"], ENT_COMPAT) ?>">
-                <input type="hidden" name="client_uuid" value="<?= htmlspecialchars($_REQUEST["client_uuid"], ENT_COMPAT) ?>">
+                <input type="hidden" name="client_id" value="<?= htmlspecialchars($_REQUEST["client_id"] ?? $_REQUEST["client_uuid"], ENT_COMPAT) ?>">
 
                 <div class="mb-3">
                     <label for="totpInput" class="form-label">Code</label>

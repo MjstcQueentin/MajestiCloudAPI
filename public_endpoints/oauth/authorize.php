@@ -8,19 +8,20 @@ $error = "";
 
 try {
     // Check for mendatory values
-    if (empty($_REQUEST["client_uuid"]) || empty($_REQUEST["redirect_uri"])) {
+    if ((empty($_REQUEST["client_uuid"]) && empty($_REQUEST["client_id"])) || empty($_REQUEST["redirect_uri"])) {
         $error .= " Missing parameters in the request.";
     }
 
     // Check if the supplied client_uuid exists
-    $client_exists = $engine->check_client($_REQUEST["client_uuid"]);
+    $client_id = $_REQUEST["client_id"] ?? $_REQUEST["client_uuid"];
+    $client_exists = $engine->check_client($client_id);
     if (!$client_exists) {
-        $error .= " Invalid client UUID.";
+        $error .= " Invalid client ID.";
     }
 
     // Check if the supplied redirect_uri is correct
-    $client = $engine->select_client($_REQUEST["client_uuid"]);
-    $permissions = $engine->get_client_permissions($_REQUEST["client_uuid"]);
+    $client = $engine->select_client($client_id);
+    $permissions = $engine->get_client_permissions($client_id);
     if ($client["callback_url"] !== $_REQUEST["redirect_uri"]) {
         $error .= " Invalid redirect URI.";
     }
@@ -188,7 +189,7 @@ try {
                 <?php $_SESSION["alert"] = ""; ?>
             <?php endif; ?>
             <form action="authorize.php" method="POST">
-                <input type="hidden" name="client_uuid" value="<?= $_REQUEST['client_uuid'] ?>">
+                <input type="hidden" name="client_id" value="<?= $_REQUEST["client_id"] ?? $_REQUEST['client_uuid'] ?>">
                 <input type="hidden" name="redirect_uri" value="<?= $_REQUEST['redirect_uri'] ?>">
                 <?php if (!empty($_REQUEST["code_challenge"]) && !empty($_REQUEST["code_challenge_method"])) : ?>
                     <input type="hidden" name="code_challenge" value="<?= $_REQUEST['code_challenge'] ?>">
@@ -211,7 +212,7 @@ try {
             <div class="border-top mt-3 pt-3">
                 <p class="fs-5 mb-1">No account on MajestiCloud yet?</p>
                 <form action="newaccount.php" method="GET">
-                    <input type="hidden" name="client_uuid" value="<?= $_REQUEST['client_uuid'] ?>">
+                    <input type="hidden" name="client_id" value="<?= $_REQUEST["client_id"] ?? $_REQUEST['client_uuid'] ?>">
                     <input type="hidden" name="redirect_uri" value="<?= $_REQUEST['redirect_uri'] ?>">
                     <?php if (!empty($_REQUEST["code_challenge"]) && !empty($_REQUEST["code_challenge_method"])) : ?>
                         <input type="hidden" name="code_challenge" value="<?= $_REQUEST['code_challenge'] ?>">
