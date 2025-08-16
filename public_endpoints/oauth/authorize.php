@@ -58,7 +58,7 @@ try {
                     $user = $engine->select_user($_POST["username"]);
                     $code = $engine->create_authorization_code(
                         $user["uuid"],
-                        $_POST["client_uuid"],
+                        $client_id,
                         !empty($code_challenge) ? $code_challenge : null,
                         !empty($code_challenge_method) ? $code_challenge_method : null
                     );

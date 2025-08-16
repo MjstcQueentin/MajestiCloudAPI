@@ -20,4 +20,18 @@ class SquarenoteEngine extends GlobalEngine
         $this->dataprocessor = new SquarenoteDataProcessor($this->current_session()["user_uuid"]);
         $this->pdo = new SquarenotePDO($this->environment);
     }
+
+    public function getStickyNotes() {
+        return $this->dataprocessor->getStickyNotes();
+    }
+
+    public function getStickyNote(string $id): ?string
+    {
+        return $this->dataprocessor->getStickyNote($id);
+    }
+
+    public function setStickyNote(string $content): ?string
+    {
+        return $this->dataprocessor->setStickyNote($content);
+    }
 }

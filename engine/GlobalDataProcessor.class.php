@@ -5,7 +5,7 @@
  */
 class GlobalDataProcessor
 {
-    private string $base_path;
+    protected string $base_path;
 
     function __construct(string $scope, string $user_uuid)
     {
@@ -16,7 +16,7 @@ class GlobalDataProcessor
         }
     }
 
-    private function path_to(string $file_uuid)
+    protected function path_to(string $file_uuid)
     {
         return $this->base_path . "/" . $file_uuid;
     }
