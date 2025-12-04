@@ -1,5 +1,10 @@
 <?php
-session_start();
+session_start([
+    "cookie_lifetime" => 86400,
+    "cookie_secure" => true,
+    "cookie_httponly" => true,
+    "cookie_samesite" => "Lax"
+]);
 if (!isset($_SESSION["alert"])) $_SESSION["alert"] = "";
 
 require_once(__DIR__ . "/../../engine/user/UserEngine.class.php");
